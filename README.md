@@ -23,7 +23,6 @@ We demonstrate the code on some well-known sudoku puzzles.
 
 - Arto Inkala's _Everest_
 - Arto Inkala's _Al Escargot_
-- Gordon Royle's Puzzle
 
 # Dependencies
 My code uses no libraries, but was written with Python version 3.8.
