@@ -22,6 +22,7 @@ This function does the same thing as the `sudoku` function but records the progr
 We demonstrate the code on some well-known sudoku puzzles.
 
 - Arto Inkala's _Everest_
+- Arto Inkala's _Al Escargot_
 - Gordon Royle's Puzzle
 
 # Dependencies
