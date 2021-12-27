@@ -6,16 +6,34 @@ Sudoku is a puzzle game whose objective is to fill a 9 × 9 grid with the digits
 
 The solver that I present here uses recursive backtracking.
 
+# Contents of `sudoku.py`
+## The `candidates` function
+This is the workhorse of the solver. It takes in a partially filled 9 × 9 grid and generates a list of candidate digits for each blank square.
+
+## The `sudoku` function
+This function solves the puzzle through repeated use of the `candidates` function. It first fills in the squares that are "obvious" before it starts guessing. Each guess essentially creates a new puzzle, which makes feasible the algorithm's recursive structure.
+
+Although the code is heavily adapted from Cleve Moler, a change that I made is to look at squares with the least candidates, as to reduce guesswork.
+
+## The `recordsudoku` function
+This function does the same thing as the `sudoku` function but records the progress on a `.txt` file.
+
+# Demonstration
+We demonstrate the code on some well-known sudoku puzzles.
+
+- Arto Inkala's _Everest_
+- Gordon Royle's Puzzle
+
 # Dependencies
-My code uses no libraries, but requires at least Python version 3.x. 
+My code uses no libraries, but was written with Python version 3.8.
 
 # References
 <a id="1">[1]</a> 
-Moler, C., 2009: Solving Sudoku with MATLAB.
+Moler, C., 2009: _Solving Sudoku with MATLAB._
 https://www.mathworks.com/company/newsletters/articles/solving-sudoku-with-matlab.html
 (Accessed December 24, 2021).
 
 <a id="2">[2]</a>
-McGuire, G., Tugemann, B., and Civario, G., 2012: There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem.
+McGuire, G., Tugemann, B., and Civario, G., 2012: _There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem._
 https://www.math.ie/McGuire_V1.pdf
 (Accessed December 24, 2021).
