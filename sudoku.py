@@ -1,201 +1,161 @@
-def candidates(X):
-    """
-    Finds candidate digits for each blank square of 9 x 9 Sudoku grid.
+class Sudoku:
+    '''
+    Representation of the sudoku puzzle.
+    ...
     
-    Parameters
+    Attributes
     ----------
-    X : 9 x 9 array of integers.
-        The unsolved Sudoku grid.
-        Unknown digits are denoted by 0.
-        Known digits are denoted by their integer value.
-
-    Returns
-    ----------
-    C : 9 x 9 array of sets (or possibly NoneTypes).
-        If the (i,j) square of X is unknown, the (i,j) entry of C lists its candidate digits.
-        If the (i,j) square of X is known, the (i,j) entry of C is a NoneType.
-        Expects a Python array.
-    
-    N : Array of integers, length 81.
-        The sizes of each set in C.
-        NoneTypes are given the size inf.
-        C[0][0] through C[0][8] are stored in N[0] through N[8].
-        C[1][0] through C[1][8] are stored in N[9] through N[16].
-        The array is 1 dimensional to faciliate searches.
-    
-    solvabe: boolean.
-        False if the function detects X to be an impossible puzzle.
-        (It may fail to do so.)
-        Otherwise, True.
-    """
-    
-    # Initialize variables.
-    solvable = True
-    C = [None] * 9
-    for i in range(9):
-        C[i] = [None for j in range(9)]
+    M : 2D array of integers
+        (M)atrix of size 9x9 representing the grid
+        blanks are represented by 0's
+    K : dictionary
+        Summary of the (K)nown squares
+        (key:value) pairs are of the form (i,j):v
+            i: int, row (0 base) index
+            j: int, column index
+            v: int, value at square (i,j)
+    C : dictionary
+        Summary of the (C)andidates for blank squares
+        (key:value) pairs are of the form (i,j):{v1,...,vk}
+            i and j are the same as in K, but specify a blank square
+            v1,...,vk are candidate values at that blank square
+    N : dictionary
+        Categorization of blank squares by (N)umber of candidates
+        (key:value) pairs are of the form n:{(i1,j1),...,(ik,jk)}
+            n: int, number of candidates at the squares
+            (i1,j1),...,(ik,jk)
+    L : int
+        (L)east number of candidates among all blank squares
+        if L = 1, at least one blank square is obvious
+        if L = 0, the puzzle is impossible
+        if L = 2 or greater, we need to start guessing
         
-    # Fill in C.
-    for i in range(9):
-        for j in range(9):
-            if X[i][j] == 0:
-                # Assume all candidates 1,2,...,9 are possible.
-                z = set(range(1,10))
-
-                # Remove those in the same row, column, and 3x3 block.
-                for n in range(9):
-                    z = z - {X[n][j]}
-                for m in range(9):
-                    z = z - {X[i][m]}
-                for n in range(3*(i//3), 3*(i//3)+3):
-                    for m in range(3*(j//3), 3*(j//3)+3):
-                        z = z - {X[n][m]}
-
-                # Store remainder in C.
-                C[i][j] = z
+    Methods
+    -------
+    update(n, m, val)
+        Updates sudoku puzzle with a known (val)ue at square (n,m).
+    '''
+    def __init__(self, M):
+        '''
+        Parameters
+        ----------
+        M : 9x9 array of integers, see above
+        '''
+        self.M = M
+        self.K = {(i,j): M[i][j] for i in range(9)
+                  for j in range(9) if M[i][j] > 0}
+        self.C = {(i,j): set(range(1,10)) for i in range(9)
+                  for j in range(9) if M[i][j] == 0}
+        
+        # nested loop over blank squares and known squares
+        for i,j in self.C.keys():
+            for n,m in self.K.keys():
                 
-                # If an unknown square has no candidates, the puzzle is unsolvable. 
-                if len(C[i][j]) == 0:
-                    solvable = False
-                    
-    # Compute lengths of each set in C.
-    N = [len(C[i][j]) if C[i][j] != None else float('inf')
-         for i in range(9) for j in range(9)]
-    return C, N, solvable
+                same_row = i == n
+                same_column = j == m
+                same_block = (i // 3 == n // 3) and (j // 3 == m // 3)
+                
+                # if squares fall on same row, column, or 3x3 block...
+                if same_row or same_column or same_block:
+                     # ...cross out known value from candidates
+                    self.C[(i,j)] = self.C[(i,j)] - {self.K[(n,m)]}
+        
+        # categorize blank squares by (N)umber of candidates
+        self.N = {i:set() for i in range(10)}
+        for (i,j), v in self.C.items():
+            self.N[len(v)] = self.N[len(v)] | {(i,j)}
+            
+        # (L)east number of candidates among all blank squares
+        self.L = min(n for n,v in self.N.items()
+                     if len(v) > 0) if self.C else -1
+        
+    def __repr__(self):
+        '''
+        Prints out M, the numerical representation of the matrix.
+        '''
+        return '\n'.join(str(m) for m in self.M)
     
-def sudoku(X):
-    """
-    Solves the Sudoku puzzle.
-    
-    Parameters
-    ----------
-    X : 9 x 9 array of integers.
-        The unsolved Sudoku grid.
-        Unknown digits are denoted by 0.
-        Known digits are denoted by their integer value.
+    def update(self, n, m, val):
+        '''
+        Updates sudoku puzzle with a known (val)ue at square (n,m).
+        Value may be incorrect, resulting in an impossible puzzle.
         
-    Returns
-    ----------
-        If X admits a solution, returns 9 x 9 array of integers.
-        The solved Sudoku grid.
-        
-        If X does not admit a solution, returns None.
-    """
-    
-    # Fill in all singletons until guesswork is needed.
-    C, N, solvable = candidates(X)
-    while 1 in N and solvable:
-        i = N.index(1) // 9
-        j = N.index(1) % 9
-        X[i][j] = C[i][j].pop()
-        C, N, solvable = candidates(X)
-        
-    # Return None for impossible puzzles.
-    if not solvable:
-        return
-        
-    # If there are still blanks:
-    if any(X[i][j] == 0 for i in range(9) for j in range(9)):
-        
-        # Choose a square with the least number of candidates.
-        i = N.index(min(N)) // 9
-        j = N.index(min(N)) % 9
-        
-        # Keep a copy of the puzzle as it is.
-        Y = [[] + row for row in X]
-        
-        # For each candidate in the shortest list:
-        for r in C[i][j]:
+        Parameters
+        ----------
+        n : int
+            row index
+        m : int
+            column index
+        val : int
+            value at square (n,m)
+        '''
+        del self.C[(n,m)]
+        self.K[(n,m)] = val
+        self.M[n][m] = val
+
+        for i,j in self.C.keys():
             
-            # Make a separate copy of the puzzle.
-            X = [[] + row for row in Y]
+            row = i == n
+            col = j == m
+            block = (i // 3 == n // 3) and (j // 3 == m // 3)
             
-            # Insert tentative value.
-            X[i][j] = r
+            if row or col or block:
+                self.C[(i,j)] = self.C[(i,j)] - {val}
+
+        self.N = {i:set() for i in range(10)}
+        for (i,j), v in self.C.items():
+            self.N[len(v)] = self.N[len(v)] | {(i,j)}
             
-            # Recursive call.
-            X = sudoku(X)
-            
-            # Solution found.
-            if X != None and all(X[i][j] > 0 for i in range(9) for j in range(9)):
-                return X
-            
-    # Return solution from original function call.
-    else:
-        return X
+        self.L = min(n for n,v in self.N.items()
+                     if len(v) > 0) if self.C else -1
         
-def recordsudoku(X,f):
-    """
-    Solves the Sudoku puzzle and records progress.
+from copy import deepcopy
+
+def solve(P):
+    '''
+    Solves sudoku (P)uzzle using recursive backtracking.
     
     Parameters
     ----------
-    X : 9 x 9 array of integers.
-        The unsolved Sudoku grid.
-        Unknown digits are denoted by 0.
-        Known digits are denoted by their integer value.
+    P : Sudoku
+        The sudoku object must be initialized by a 9x9 array.
+    '''
+    
+    # while there are obvious blanks, fill them in
+    while P.L == 1:
+        # get coordinates of blank square
+        (i,j) = P.N[1].pop()
         
-    f : File object, opened in 'w' mode.
-        Text file to store intermediate steps in solving.
+        # get value of blank square
+        val = P.C[(i,j)].pop()
         
-    Returns
-    ----------
-        If X admits a solution, returns 9 x 9 array of integers.
-        The solved Sudoku grid.
+        # call update function
+        P.update(i,j,val)
+
+    if P.L > 0:
+        # we have to start guessing
+        # choose any square with least candidates
+        (i,j) = P.N[P.L].pop()
         
-        If X does not admit a solution, returns None.
-    """
-       
-    # Fill in all singletons until guesswork is needed.
-    C, N, solvable = candidates(X)
-    while 1 in N and solvable:
-        i = N.index(1) // 9
-        j = N.index(1) % 9
-        X[i][j] = C[i][j].pop()
-        C, N, solvable = candidates(X)
-        
-    # If puzzle is impossible, write "Wrong guess." and return nothing.
-    if not solvable:
-        f.write("Wrong guess.\n\n")
-        return
-        
-    # If there are still blanks:
-    if any(X[i][j] == 0 for i in range(9) for j in range(9)):
-        
-        # Choose a square with the least number of candidates.
-        i = N.index(min(N)) // 9
-        j = N.index(min(N)) % 9
-        
-        # Keep a copy of the puzzle as it is.
-        Y = [[] + row for row in X]
-        
-        # For each candidate in the shortest list:
-        for r in C[i][j]:
+        for r in P.C[(i,j)]: # choose candidate r
             
-            # Make a separate copy of the puzzle.
-            X = [[] + row for row in Y]
+            # copy puzzle
+            Q = deepcopy(P)
             
-            # Insert tentative value.
-            X[i][j] = r
+            # insert guess into copy
+            Q.update(i,j,r)
             
-            # Record the guess and the square.
-            f.write("Try {} in square ({},{}).\n".format(r, i+1, j+1))
+            # recursive call
+            Q = solve(Q)
             
-            # Record the puzzle.
-            for k in range(9):
-                f.write(str(X[k]) + '\n')
-            f.write('\n')
-            
-            # Recursive call.
-            X = recordsudoku(X,f)
-            
-            # Solution found.
-            if X != None and all(X[i][j] > 0 for i in range(9) for j in range(9)):
-                return X
+            # solution is found
+            if Q != None:
+                return Q
+    
+    elif P.L == 0:
+        # if puzzle is impossible, return None
+        return None
+    
     else:
-        
-        # Announce solution from original function call.
-        f.write('We found the solution:\n')
-        for k in range(9):
-            f.write(str(X[k]) + '\n')
-        return X
+        # we had it on the first guess
+        return P
