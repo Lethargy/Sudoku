@@ -7,16 +7,10 @@ Sudoku is a puzzle game whose objective is to fill a 9 × 9 grid with the digits
 The solver that I present here uses recursive backtracking.
 
 # Contents of `sudoku.py`
-## The `candidates` function
-This is the workhorse of the solver. It takes in a partially filled 9 × 9 grid and generates a list of candidate digits for each blank square.
+## The `Sudoku` class
+An encapsulation of the sudoku puzzle. Known squares are represented by dictionaries with keys that correspond to coordinates and values that correspond to the numbers at those coordinates. Blank squares are represented similarly, but its dictionary values are sets containing candidates. Another dictionary categorizes the blank squares by their number of candidates.
 
-## The `sudoku` function
-This function solves the puzzle through repeated use of the `candidates` function. It first fills in the squares that are "obvious" before it starts guessing. Each guess essentially creates a new puzzle, which makes feasible the algorithm's recursive structure.
-
-Although the code is heavily adapted from Cleve Moler, a change that I made is to look at squares with the least candidates, as to reduce guesswork.
-
-## The `recordsudoku` function
-This function does the same thing as the `sudoku` function but records the progress on a `.txt` file.
+Although the code is heavily adapted from Cleve Moler, my code starts guessing at the blank square with the the least candidates.
 
 # Demonstration
 We demonstrate the code on some well-known sudoku puzzles.
