@@ -29,7 +29,7 @@ class Sudoku:
         if L = 1, at least one blank square is obvious
         if L = 0, the puzzle is impossible
         if L = 2 or greater, we need to start guessing
-        if L = -1, we are done
+        if L = -1, the puzzle is solved, and we are done
         
     Methods
     -------
